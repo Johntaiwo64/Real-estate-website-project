@@ -1,15 +1,9 @@
-export function FeatureBand({ calculator = false }) {
-  return (
-    <section className={calculator ? 'feature-band calculator-band' : 'feature-band'} id={calculator ? 'calculator' : 'about'}>
-      <div className="feature-inner">
-        <div className="feature-illustration"><div className={calculator ? 'illustration-art calculator-art' : 'illustration-art'}><span>{calculator ? '▦' : '⌂'}</span><i /><i /><i /></div></div>
-        <div className="feature-copy">
-          <p className="eyebrow">{calculator ? 'SMART PROPERTY TOOLS' : 'WHY CHOOSE US'}</p>
-          <h2>{calculator ? 'Calculate the cost of your property' : 'We are the best in the housing market'}</h2>
-          {calculator ? <p>Real estate appraisal helps you understand the average market value of an apartment, house, or land. Calculate your property cost with our new calculation service.</p> : <ul><li>We are the leading authority in the housing market.</li><li>When it comes to real estate, we are simply the best.</li><li>Our expertise and results make us the top choice locally.</li><li>We stand out as the premier residential real estate provider.</li><li>For unparalleled service and results, choose us.</li></ul>}
-          <button className="outline-button" type="button">{calculator ? 'Calculate now' : 'Add Property'} <span>↗</span></button>
-        </div>
-      </div>
-    </section>
-  )
+export function FeatureBand() {
+  return <section className="feature-band" id="about"><div className="feature-inner">
+    <div className="feature-illustration"><div className="illustration-art"><span>⌂</span><i /><i /><i /></div></div>
+    <div className="feature-copy"><p className="eyebrow">WHY CHOOSE US</p><h2>A clearer path to your next property</h2>
+      <ul><li>Guidance through the property search and enquiry process.</li><li>Local property options across selected Lagos locations.</li>
+        <li>Direct communication with our team before you make a decision.</li><li>Support for buyers, sellers and property owners.</li></ul>
+      <a className="outline-button feature-link" href="https://wa.me/2347067795770" target="_blank" rel="noreferrer">Talk to our team <span>↗</span></a>
+    </div></div></section>
 }
