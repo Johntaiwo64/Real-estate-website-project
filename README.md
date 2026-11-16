@@ -1,85 +1,61 @@
 # Salem Real Estate
 
-A responsive real-estate discovery interface built with React and Vite. The project demonstrates reusable React components, controlled form inputs, client-side filtering, saved listings, modal detail views, a mortgage repayment estimator and WhatsApp enquiry flows.
+A responsive property-discovery application built with React 19, JavaScript, Vite and Supabase. It demonstrates reusable components, controlled search and filters, saved listings, property details, a mortgage estimator, WhatsApp enquiries, authentication and moderation-aware property submissions.
 
 ## Features
 
-- Responsive navigation with an accessible mobile menu.
-- Controlled property search by buying/renting intent, location, property type and maximum asking price.
-- Property cards with detail modal and WhatsApp enquiry link.
-- Saved-property shortlist persisted in the current browser with localStorage (not synced between devices).
-- Mortgage repayment estimator with principal, interest and term inputs.
-- Property submission enquiry form that prepares a WhatsApp message.
-- Empty states, labelled controls, accessible button states and responsive layouts.
+- Responsive navigation and mobile menu.
+- Property filtering by buy/rent purpose, location, property type and maximum price.
+- Property detail modal, WhatsApp enquiry links and saved-property shortlist.
+- Demo favourites persist in the browser; authenticated favourites are stored in Supabase.
+- Mortgage repayment estimator.
+- Supabase email/password sign-up and sign-in.
+- Public display of active database listings, with sample listings as a fallback.
+- Signed-in users can submit properties for admin review; submissions start with `pending` status.
+- Row Level Security policies for profiles, properties, favourites and property-image storage.
+- GitHub Actions production-build workflow.
 
 ## Tech stack
 
-- React 19
-- JavaScript (ES modules and JSX)
-- Vite
-- CSS
+- React 19, JavaScript (ES modules / JSX), Vite and CSS
+- Supabase Auth, PostgreSQL and Storage
 
 ## Run locally
 
-Requires Node.js 20.19+ or 22.12+.
+Requires Node.js 22.12+ (or a compatible newer release).
 
 ```bash
 npm install
+cp .env.example .env.local
 npm run dev
 ```
 
-Create a production build with `npm run build`; preview it with `npm run preview`.
+Create a production build with `npm run build`; run ESLint with `npm run lint`.
 
-## Project structure
+## Environment variables
 
-```text
-src/
-  components/
-    FeatureBand.jsx
-    Footer.jsx
-    Header.jsx
-    HeroSearch.jsx
-    MortgageCalculator.jsx
-    OfferSection.jsx
-    PropertyDetailsModal.jsx
-    PropertySubmissionModal.jsx
-    ServiceGrid.jsx
-  App.jsx
-  data.js
-  index.css
-  main.jsx
+Set these in `.env.local` and in your hosting provider's environment settings:
+
+```env
+VITE_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
+VITE_SUPABASE_ANON_KEY=YOUR_SUPABASE_PUBLISHABLE_OR_ANON_KEY
 ```
 
-## Demo and production notes
+The publishable/anon key is intended for browser apps when Row Level Security is correctly configured. Never expose a Supabase `service_role` or secret key in frontend code, a `VITE_*` variable, or GitHub.
 
-The listings in `src/data.js` are sample content for demonstrating the interface. Verify property details, prices, images, counts, company contact information and availability before publishing as a live catalogue.
+## Supabase setup
 
-Search, filtering, the calculator and saved list run in the browser. Saved properties persist in the current browser using localStorage, but are not linked to a user account or synced between devices. The submission form opens a prefilled WhatsApp enquiry; it does not store or publish listings. The sample data currently contains purchase listings only, so selecting Rent displays an empty state.
+1. Open the Supabase project dashboard and go to **SQL Editor**.
+2. Run `supabase/migrations/202611160001_initial_schema.sql`.
+3. Confirm that the `profiles`, `properties` and `favorites` tables exist and that Row Level Security is enabled.
+4. Configure both environment variables locally and in the Vercel project.
+5. Redeploy after changing Vercel environment variables.
 
-A production property platform still needs a secure backend/database, authentication and roles, persistent favourites, verified listing management, image uploads, moderation and automated tests. These are not claimed as implemented here.
-
-## Supabase backend setup (database foundation)
-
-The repository includes an initial SQL migration at `supabase/migrations/202611160001_initial_schema.sql`. It creates:
-
-- `profiles` linked to Supabase Auth users, with ordinary-user and admin roles.
-- `properties` with owner, price, location, type, buy/rent purpose and moderation status.
-- `favorites` scoped to the signed-in user.
-- Row Level Security policies for public active listings, owner submissions and admin moderation.
-- A public `property-images` Storage bucket with authenticated owner-folder upload restrictions.
-
-### Configure your Supabase project
-
-1. Create a Supabase project at [supabase.com](https://supabase.com/).
-2. Open **SQL Editor** in the Supabase dashboard.
-3. Paste and run the migration file from `supabase/migrations/202611160001_initial_schema.sql`.
-4. In **Project Settings → API**, copy the Project URL and publishable/anon key.
-5. Copy `.env.example` to `.env.local` and fill in `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`.
-6. Never put a Supabase `service_role` or secret key in frontend code, a `VITE_*` variable, or GitHub.
+The migration creates user profiles, property listings, favourites, account and timestamp triggers, RLS policies, and a public `property-images` Storage bucket with file-type, size and owner-folder restrictions.
 
 ### Admin account
 
-New registrations receive the `user` role. To grant admin access, first register your own account, find its UUID in **Authentication → Users**, then run this statement in the SQL Editor after replacing the placeholder:
+New accounts receive the `user` role. To promote a trusted administrator, register the account, find its UUID in **Authentication → Users**, then run this in the SQL Editor after replacing the placeholder:
 
 ```sql
 update public.profiles
@@ -87,12 +63,16 @@ set role = 'admin'
 where id = 'YOUR_AUTH_USER_UUID';
 ```
 
-Do not expose admin promotion as a public form. Only a trusted project owner should run this SQL.
+Only a trusted project owner should promote administrators. Do not expose role promotion in the public application.
 
-### Current integration status
+## Current limitations and production checklist
 
-The React app now includes Supabase email/password sign-up and sign-in, reads active listings from the database, stores authenticated favourites in the `favorites` table, and submits property listings for admin review. Configure the environment variables and apply the migration before testing these flows. If no active database listings exist, the UI falls back to its sample listings. Property image upload is not yet connected; the storage bucket and policies are prepared for that next step. The browser's demo favourites remain local until a user signs in.
+- The migration must still be applied to the intended Supabase project; repository code does not create the remote database.
+- The Vercel deployment needs `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` configured for the required environments, followed by a redeploy.
+- Property image upload UI and an admin dashboard are not implemented yet. Moderation currently requires a trusted administrator to update listing status through a secure database interface.
+- Sample listings and category counts are demonstration content, not verified inventory. Verify all prices, property details, images and contact information before commercial use.
+- End-to-end tests and a full production security review remain future work.
 
 ## License
 
-No license has been specified. Contact the project owner before reusing the code or assets.
+No license has been specified. Contact the project owner before reusing code or assets.
