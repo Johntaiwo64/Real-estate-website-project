@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { company } from '../data'
 
-export default function Header({ savedCount = 0, showSavedOnly, onToggleSaved, onAddProperty }) {
+export default function Header({ savedCount = 0, showSavedOnly, onToggleSaved, onAddProperty, userEmail, onSignIn, onSignOut }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const closeMenu = () => setMenuOpen(false)
   return (
@@ -21,6 +21,7 @@ export default function Header({ savedCount = 0, showSavedOnly, onToggleSaved, o
         <button className={showSavedOnly ? 'saved-nav is-active' : 'saved-nav'} type="button"
           onClick={() => { onToggleSaved?.(); closeMenu() }}>Saved <span>{savedCount}</span></button>
         <button className="header-listing" type="button" onClick={() => { onAddProperty?.(); closeMenu() }}>List your property <span>↗</span></button>
+        {userEmail ? <button className="saved-nav" type="button" onClick={() => { onSignOut?.(); closeMenu() }}>Sign out</button> : <button className="saved-nav" type="button" onClick={() => { onSignIn?.(); closeMenu() }}>Sign in</button>}
         <a className="header-action" href={company.whatsapp} target="_blank" rel="noreferrer" onClick={closeMenu}>WhatsApp us <span>↗</span></a>
       </nav>
     </header>
