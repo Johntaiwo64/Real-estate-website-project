@@ -16,7 +16,18 @@ const initialFilters = { purpose: 'Buy', location: 'All locations', propertyType
 
 function App() {
   const [filters, setFilters] = useState(initialFilters)
-  const [savedIds, setSavedIds] = useState(() => {\n    try {\n      const stored = JSON.parse(window.localStorage.getItem('salem-saved-properties') || '[]')\n      return Array.isArray(stored) ? stored.filter((id) => typeof id === 'string') : []\n    } catch {\n      return []\n    }\n  })\n\n  useEffect(() => {\n    window.localStorage.setItem('salem-saved-properties', JSON.stringify(savedIds))\n  }, [savedIds])
+  const [savedIds, setSavedIds] = useState(() => {
+    try {
+      const stored = JSON.parse(window.localStorage.getItem('salem-saved-properties') || '[]')
+      return Array.isArray(stored) ? stored.filter((id) => typeof id === 'string') : []
+    } catch {
+      return []
+    }
+  })
+
+  useEffect(() => {
+    window.localStorage.setItem('salem-saved-properties', JSON.stringify(savedIds))
+  }, [savedIds])
   const [showSavedOnly, setShowSavedOnly] = useState(false)
   const [selectedProperty, setSelectedProperty] = useState(null)
   const [showSubmission, setShowSubmission] = useState(false)
