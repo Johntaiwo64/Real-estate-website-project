@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Header from './components/Header'
 import HeroSearch from './components/HeroSearch'
 import ServiceGrid from './components/ServiceGrid'
@@ -16,7 +16,7 @@ const initialFilters = { purpose: 'Buy', location: 'All locations', propertyType
 
 function App() {
   const [filters, setFilters] = useState(initialFilters)
-  const [savedIds, setSavedIds] = useState([])
+  const [savedIds, setSavedIds] = useState(() => {\n    try {\n      const stored = JSON.parse(window.localStorage.getItem('salem-saved-properties') || '[]')\n      return Array.isArray(stored) ? stored.filter((id) => typeof id === 'string') : []\n    } catch {\n      return []\n    }\n  })\n\n  useEffect(() => {\n    window.localStorage.setItem('salem-saved-properties', JSON.stringify(savedIds))\n  }, [savedIds])
   const [showSavedOnly, setShowSavedOnly] = useState(false)
   const [selectedProperty, setSelectedProperty] = useState(null)
   const [showSubmission, setShowSubmission] = useState(false)
