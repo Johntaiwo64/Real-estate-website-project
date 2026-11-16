@@ -131,7 +131,68 @@ drop policy if exists "Users can remove own favorites" on public.favorites;
 create policy "Users can remove own favorites" on public.favorites
   for delete to authenticated using (user_id = (select auth.uid()));
 
--- Admin access is intentionally granted out-of-band by a trusted project owner.
--- Example after creating your own account:
+-- SECURITY DEFINER avoids recursive profile RLS checks when testing the caller's role.
+create or replace function public.is_admin()
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $
+  select exists (
+    select 1 from public.profiles
+    where id = (select auth.uid()) and role = 'admin'
+  );
+$;
+
+drop policy if exists "Admins can read all properties" on public.properties;
+create policy "Admins can read all properties" on public.properties
+  for select to authenticated using ((select public.is_admin()));
+drop policy if exists "Admins can moderate properties" on public.properties;
+create policy "Admins can moderate properties" on public.properties
+  for update to authenticated using ((select public.is_admin()))
+  with check ((select public.is_admin()));
+
+-- Public property images; uploads must be stored under a folder named with the owner's auth UUID.
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('property-images', 'property-images', true, 5242880, array['image/jpeg','image/png','image/webp'])
+on conflict (id) do update set
+  public = excluded.public,
+  file_size_limit = excluded.file_size_limit,
+  allowed_mime_types = excluded.allowed_mime_types;
+
+drop policy if exists "Public can view property images" on storage.objects;
+create policy "Public can view property images" on storage.objects
+  for select to anon, authenticated
+  using (bucket_id = 'property-images');
+
+drop policy if exists "Owners can upload property images" on storage.objects;
+create policy "Owners can upload property images" on storage.objects
+  for insert to authenticated
+  with check (
+    bucket_id = 'property-images'
+    and (storage.foldername(name))[1] = (select auth.uid())::text
+  );
+
+drop policy if exists "Owners and admins can update property images" on storage.objects;
+create policy "Owners and admins can update property images" on storage.objects
+  for update to authenticated
+  using (
+    bucket_id = 'property-images'
+    and ((storage.foldername(name))[1] = (select auth.uid())::text or (select public.is_admin()))
+  )
+  with check (
+    bucket_id = 'property-images'
+    and ((storage.foldername(name))[1] = (select auth.uid())::text or (select public.is_admin()))
+  );
+
+drop policy if exists "Owners and admins can delete property images" on storage.objects;
+create policy "Owners and admins can delete property images" on storage.objects
+  for delete to authenticated
+  using (
+    bucket_id = 'property-images'
+    and ((storage.foldername(name))[1] = (select auth.uid())::text or (select public.is_admin()))
+  );
+
+-- After creating your own account, promote it manually from the SQL Editor:
 -- update public.profiles set role = 'admin' where id = '<your-auth-user-uuid>';
--- Add admin-specific policies only after verifying the role lookup strategy.
