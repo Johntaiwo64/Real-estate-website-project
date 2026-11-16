@@ -96,13 +96,30 @@ function App() {
 
   const submitProperty = async (form) => {
     if (!supabase || !session?.user?.id) { setShowSubmission(false); setShowAuth(true); return }
-    const { error } = await supabase.from('properties').insert({
-      owner_id: session.user.id, title: form.title, description: form.message || '',
-      purpose: form.purpose, property_type: form.type, price: Number(form.price),
-      address: form.location, bedrooms: Number(form.bedrooms || 0), bathrooms: Number(form.bathrooms || 0),
-      status: 'pending',
-    })
-    if (error) throw error
+    const imageUrls = []
+    const uploadedPaths = []
+    try {
+      for (const file of form.images || []) {
+        const extension = file.type === 'image/png' ? 'png' : file.type === 'image/webp' ? 'webp' : 'jpg'
+        const path = `${session.user.id}/${crypto.randomUUID()}.${extension}`
+        const { error: uploadError } = await supabase.storage.from('property-images').upload(path, file, {
+          cacheControl: '3600', upsert: false, contentType: file.type,
+        })
+        if (uploadError) throw uploadError
+        uploadedPaths.push(path)
+        imageUrls.push(supabase.storage.from('property-images').getPublicUrl(path).data.publicUrl)
+      }
+      const { error } = await supabase.from('properties').insert({
+        owner_id: session.user.id, title: form.title, description: form.message || '',
+        purpose: form.purpose, property_type: form.type, price: Number(form.price),
+        address: form.location, bedrooms: Number(form.bedrooms || 0), bathrooms: Number(form.bathrooms || 0),
+        image_urls: imageUrls, status: 'pending',
+      })
+      if (error) throw error
+    } catch (error) {
+      if (uploadedPaths.length) await supabase.storage.from('property-images').remove(uploadedPaths)
+      throw error
+    }
     setShowSubmission(false)
     setBackendMessage('Your property has been submitted for admin review.')
   }
