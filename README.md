@@ -91,7 +91,7 @@ Do not expose admin promotion as a public form. Only a trusted project owner sho
 
 ### Current integration status
 
-This migration is the database/security foundation only. The current React interface still uses sample listings and browser state; authentication, database-backed listings/favourites and image upload must be connected and tested after a real Supabase project is configured. The SQL policies are included to protect those future client operations; they do not by themselves make the frontend persistent.
+The React app now includes Supabase email/password sign-up and sign-in, reads active listings from the database, stores authenticated favourites in the `favorites` table, and submits property listings for admin review. Configure the environment variables and apply the migration before testing these flows. If no active database listings exist, the UI falls back to its sample listings. Property image upload is not yet connected; the storage bucket and policies are prepared for that next step. The browser's demo favourites remain local until a user signs in.
 
 ## License
 
