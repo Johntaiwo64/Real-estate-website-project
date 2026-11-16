@@ -43,7 +43,7 @@ function App() {
     supabase.auth.getSession().then(({ data }) => { if (alive) setSession(data.session) })
     const { data: listener } = supabase.auth.onAuthStateChange((_event, nextSession) => {
       setSession(nextSession)
-      if (!nextSession) setSavedIds(current => current.filter(id => id.startsWith('demo-')))
+      if (!nextSession) setSavedIds(current => current.filter(id => !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(id))))
     })
     return () => { alive = false; listener.subscription.unsubscribe() }
   }, [])
@@ -85,7 +85,7 @@ function App() {
   const toggleSaved = async (id) => {
     const exists = savedIds.includes(id)
     setSavedIds(current => exists ? current.filter(item => item !== id) : [...current, id])
-    if (supabase && session?.user?.id && !String(id).startsWith('demo-')) {
+    if (supabase && session?.user?.id && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(id))) {
       const result = exists
         ? await supabase.from('favorites').delete().eq('user_id', session.user.id).eq('property_id', id)
         : await supabase.from('favorites').insert({ user_id: session.user.id, property_id: id })
